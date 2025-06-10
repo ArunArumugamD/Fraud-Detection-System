@@ -31,7 +31,13 @@ pre-commit==3.6.0
 prometheus-client==0.19.0
 python-json-logger==2.0.7
 
-# Data processing (for fraud detection system)
+# Data processing (for fraud detection)
 pandas==2.1.4
 numpy==1.26.3
 scikit-learn==1.4.0
+
+# Streaming and async
+kafka-python==2.0.2
+aiokafka==0.10.0
+websockets==12.0
+asyncio==3.4.3
