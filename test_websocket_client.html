@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Detection Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-card: #161616;
+            --bg-hover: #1a1a1a;
+            
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #6b6b6b;
+            
+            --accent-primary: #3b82f6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            
+            --border-color: #262626;
+            --border-radius: 16px;
+            --border-radius-sm: 8px;
+            
+            --shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 
+                      0 10px 15px -3px rgba(0, 0, 0, 0.5), 
+                      0 4px 6px -2px rgba(0, 0, 0, 0.3);
+            --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.05);
+            
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .status-dot.connected {
+            background: var(--accent-success);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1),
+                        0 0 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .status-dot.connected::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            opacity: 0;
+            animation: ripple 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        .status-dot.disconnected {
+            background: var(--text-muted);
+        }
+
+        .status-text {
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        button {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            outline: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+            border-color: var(--text-muted);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            transform: translateX(-100%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .stat-card:hover {
+            border-color: var(--text-muted);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-primary);
+        }
+
+        .stat-value.danger {
+            color: var(--accent-danger);
+        }
+
+        /* Alerts Container */
+        .alerts-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .alerts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .alerts-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .alert-count {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            background: var(--bg-hover);
+            border-radius: 9999px;
+            color: var(--text-secondary);
+        }
+
+        .alerts-container {
+            max-height: 600px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar */
+        .alerts-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .alerts-container::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .alerts-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+
+        .alerts-container::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Alert Items */
+        /* Alert Animation */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes highlightNew {
+            0% {
+                background: rgba(59, 130, 246, 0.1);
+            }
+            100% {
+                background: var(--bg-secondary);
+            }
+        }
+
+        .alert-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            padding: 1.25rem;
+            margin-bottom: 0.75rem;
+            transition: var(--transition);
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                      highlightNew 2s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent-danger);
+        }
+
+        .alert-item.medium-risk::before {
+            background: var(--accent-warning);
+        }
+
+        .alert-item.low-risk::before {
+            background: var(--accent-success);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-item:hover {
+            background: var(--bg-hover);
+            border-color: var(--text-muted);
+        }
+
+        .alert-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .alert-type {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        .alert-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .alert-details {
+            display: grid;
+            gap: 0.625rem;
+        }
+
+        .alert-row {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 0.75rem;
+            font-size: 0.8125rem;
+            align-items: center;
+        }
+
+        .alert-row.reasons {
+            align-items: flex-start;
+        }
+
+        .alert-label {
+            color: var(--text-muted);
+            min-width: 80px;
+        }
+
+        .alert-value {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .alert-value.highlight {
+            color: var(--text-primary);
+        }
+
+        .risk-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.125rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .risk-indicator.high {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .risk-indicator.medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .risk-indicator.low {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .reason-tag {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            margin: 0.125rem 0.25rem 0.125rem 0;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .reason-tag.ml {
+            border-color: rgba(59, 130, 246, 0.3);
+            color: rgba(59, 130, 246, 0.9);
+        }
+
+        .reasons-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            max-width: 600px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1.5rem;
+            opacity: 0.3;
+        }
+
+        .empty-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-text {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .button-group {
+                width: 100%;
+            }
+            
+            button {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Fraud Detection Monitor</h1>
+            <p>Real-time transaction monitoring and alert system</p>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot disconnected" id="statusDot"></div>
+                <span class="status-text" id="statusText">Disconnected</span>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="connect()">Connect</button>
+                <button class="btn-secondary" onclick="disconnect()">Disconnect</button>
+                <button class="btn-danger" onclick="clearAlerts()">Clear</button>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Alerts</div>
+                <div class="stat-value" id="alertCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">High Risk</div>
+                <div class="stat-value danger" id="highRiskCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Time</div>
+                <div class="stat-value" id="connectionTime">--:--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Last Alert</div>
+                <div class="stat-value" id="lastAlert">Never</div>
+            </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div class="alerts-section">
+            <div class="alerts-header">
+                <h2 class="alerts-title">Live Alerts</h2>
+                <span class="alert-count" id="alertCountBadge">0 total</span>
+            </div>
+            <div class="alerts-container" id="alertsList">
+                <div class="empty-state">
+                    <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                    </svg>
+                    <div class="empty-title">No alerts detected</div>
+                    <div class="empty-text">Waiting for suspicious transactions...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let alertCount = 0;
+        let highRiskCount = 0;
+        let connectedAt = null;
+        let lastAlertTime = null;
+        const clientId = 'monitor-' + Math.random().toString(36).substr(2, 9);
+        
+        function connect() {
+            if (ws) {
+                ws.close();
+            }
+            
+            const wsUrl = `ws://localhost:8000/ws/${clientId}`;
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function(event) {
+                console.log('Connected to WebSocket');
+                updateConnectionStatus(true);
+                connectedAt = new Date();
+                updateStats();
+            };
+            
+            ws.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                console.log('Received:', message);
+                
+                if (message.type === 'fraud_alert') {
+                    displayAlert(message.data);
+                    alertCount++;
+                    if (message.data.risk_score > 0.7) {
+                        highRiskCount++;
+                    }
+                    lastAlertTime = new Date();
+                    updateStats();
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                updateConnectionStatus(false);
+            };
+            
+            ws.onclose = function(event) {
+                console.log('Disconnected from WebSocket');
+                updateConnectionStatus(false);
+                connectedAt = null;
+                updateStats();
+            };
+            
+            // Keep alive
+            setInterval(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send('ping');
+                }
+            }, 30000);
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+            }
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            if (connected) {
+                statusDot.classList.remove('disconnected');
+                statusDot.classList.add('connected');
+                statusText.textContent = `Connected • ${clientId}`;
+            } else {
+                statusDot.classList.remove('connected');
+                statusDot.classList.add('disconnected');
+                statusText.textContent = 'Disconnected';
+            }
+        }
+        
+        function formatReasons(reasons) {
+            if (!reasons || reasons.length === 0) return 'No specific reasons';
+            
+            // Create styled reason tags
+            return '<div class="reasons-container">' + 
+                reasons.map(reason => {
+                    const isML = reason.startsWith('ML:') || reason.includes('ML model');
+                    const cleanReason = reason.replace('ML: ', '');
+                    return `<span class="reason-tag ${isML ? 'ml' : ''}">${cleanReason}</span>`;
+                }).join('') + 
+                '</div>';
+        }
+        
+        function displayAlert(alertData) {
+            const alertsList = document.getElementById('alertsList');
+            
+            // Remove empty state if exists
+            const emptyState = alertsList.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const riskLevel = alertData.risk_score > 0.7 ? 'high' : 
+                             alertData.risk_score > 0.3 ? 'medium' : 'low';
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert-item ${riskLevel}-risk`;
+            
+            const riskPercent = (alertData.risk_score * 100).toFixed(1);
+            const formattedAmount = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(alertData.amount);
+            
+            const time = new Date(alertData.timestamp);
+            const timeString = time.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            alertDiv.innerHTML = `
+                <div class="alert-header-row">
+                    <div class="alert-type">${alertData.alert_type} • #${alertData.transaction_id}</div>
+                    <div class="alert-time">${timeString}</div>
+                </div>
+                <div class="alert-details">
+                    <div class="alert-row">
+                        <span class="alert-label">Amount</span>
+                        <span class="alert-value highlight">${formattedAmount}</span>
+                    </div>
+                    <div class="alert-row">
+                        <span class="alert-label">Merchant</span>
+                        <span class="alert-value">${alertData.merchant}</span>
+                    </div>
+                    <div class="alert-row">
+                        <span class="alert-label">Customer</span>
+                        <span class="alert-value">${alertData.customer_id}</span>
+                    </div>
+                    <div class="alert-row">
+                        <span class="alert-label">Risk Score</span>
+                        <span class="risk-indicator ${riskLevel}">${riskPercent}%</span>
+                    </div>
+                    <div class="alert-row reasons">
+                        <span class="alert-label">Detected</span>
+                        <div class="alert-value">${formatReasons(alertData.reasons)}</div>
+                    </div>
+                </div>
+            `;
+            
+            alertsList.insertBefore(alertDiv, alertsList.firstChild);
+            
+            // Keep only last 50 alerts
+            while (alertsList.children.length > 50) {
+                alertsList.removeChild(alertsList.lastChild);
+            }
+        }
+        
+        function clearAlerts() {
+            const alertsList = document.getElementById('alertsList');
+            alertsList.innerHTML = `
+                <div class="empty-state">
+                    <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                    </svg>
+                    <div class="empty-title">No alerts detected</div>
+                    <div class="empty-text">Waiting for suspicious transactions...</div>
+                </div>
+            `;
+            alertCount = 0;
+            highRiskCount = 0;
+            lastAlertTime = null;
+            updateStats();
+        }
+        
+        function updateStats() {
+            document.getElementById('alertCount').textContent = alertCount;
+            document.getElementById('highRiskCount').textContent = highRiskCount;
+            document.getElementById('alertCountBadge').textContent = `${alertCount} total`;
+            
+            // Connection time
+            if (connectedAt) {
+                const duration = Math.floor((new Date() - connectedAt) / 1000);
+                const hours = Math.floor(duration / 3600);
+                const minutes = Math.floor((duration % 3600) / 60);
+                const seconds = duration % 60;
+                
+                let timeStr = '';
+                if (hours > 0) {
+                    timeStr = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else {
+                    timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+                document.getElementById('connectionTime').textContent = timeStr;
+            } else {
+                document.getElementById('connectionTime').textContent = '--:--';
+            }
+            
+            // Last alert
+            if (lastAlertTime) {
+                const timeSince = Math.floor((new Date() - lastAlertTime) / 1000);
+                if (timeSince < 5) {
+                    document.getElementById('lastAlert').textContent = 'Just now';
+                } else if (timeSince < 60) {
+                    document.getElementById('lastAlert').textContent = `${timeSince}s ago`;
+                } else if (timeSince < 3600) {
+                    document.getElementById('lastAlert').textContent = `${Math.floor(timeSince / 60)}m ago`;
+                } else {
+                    document.getElementById('lastAlert').textContent = `${Math.floor(timeSince / 3600)}h ago`;
+                }
+            } else {
+                document.getElementById('lastAlert').textContent = 'Never';
+            }
+        }
+        
+        // Update stats every second
+        setInterval(updateStats, 1000);
+        
+        // Auto-connect on load
+        window.onload = function() {
+            connect();
+        };
+    </script>
+</body>
+</html>
