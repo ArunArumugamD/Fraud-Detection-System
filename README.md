@@ -149,7 +149,7 @@ curl -X POST "http://localhost:8000/api/v1/transactions?stream_mode=true" \
 
 - **Kafka UI**: http://localhost:8080
 - **API Docs**: http://localhost:8000/docs
-- **WebSocket Monitor**: Open `test_websocket_client.html`
+- **WebSocket Monitor**: Open `monitor.html`
 
 ##  Fraud Detection Logic
 
