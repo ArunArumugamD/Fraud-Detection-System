@@ -86,7 +86,7 @@ A production-ready enterprise fraud detection system with real-time streaming, m
    ```
 
 2. **Open WebSocket monitor**
-   - Open `test_websocket_client.html` in your browser
+   - Open `monitor.html` in your browser
 
 3. **Access API documentation**
    - http://localhost:8000/docs
