@@ -91,7 +91,7 @@ A production-ready enterprise fraud detection system with real-time streaming, m
 3. **Access API documentation**
    - http://localhost:8000/docs
 
-## 📡 API Endpoints
+##  API Endpoints
 
 ### Transaction Processing
 - `POST /api/v1/transactions` - Process transaction (direct mode)
