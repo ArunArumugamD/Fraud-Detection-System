@@ -6,6 +6,8 @@ import uvicorn
 import json
 from typing import Optional, List, Dict
 from datetime import datetime
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 import asyncio
 import logging
 
@@ -40,6 +42,8 @@ app = FastAPI(
     description="Enterprise fraud detection API with ML and real-time streaming",
     version="2.0.0"
 )
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Configure CORS (for frontend connections later)
 app.add_middleware(
@@ -101,6 +105,10 @@ async def health_check():
         "status": "healthy",
         "service": "fraud-detection-api"
     }
+
+@app.get("/monitor")
+async def monitor():
+    return RedirectResponse(url="/static/monitor.html")
 
 
 # Example fraud check endpoint (placeholder)
